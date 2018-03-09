@@ -1,0 +1,1 @@
+{"headerParams":[{"defaultValue":"bing","method":"ibas-header","paramName":"bing"}],"requestParams":[{"defaultValue":"ibas","method":"ibas-param","paramName":"ibas"}],"requestUrl":{"method":"defaultValue","type":"Get","url":"http://localhost:3080/testGet"}}

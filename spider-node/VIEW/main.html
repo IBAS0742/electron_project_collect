@@ -1,0 +1,183 @@
+
+<!-- Bootstrap core CSS     -->
+<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Animation library for notifications   -->
+<link href="assets/css/animate.min.css" rel="stylesheet"/>
+
+<!--   Core JS Files   -->
+<script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="assets/js/child.js"></script>
+<script src="assets/js/vue.min.js"></script>
+
+<style>
+    img {
+        max-width : 100%;
+    }
+</style>
+
+<div style="padding:0.5em;">
+    <h3>说明</h3>
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <v-collapse :ind="'db'" :title="'配置数据库'">
+            <div slot="content">
+                <p>这里使用的数据库是&nbsp;&nbsp;<span class="label label-default">Mysql</span>&nbsp;&nbsp;数据库</p>
+                <p>如果爬取时需要使用数据库存储应当首先进行配置，&nbsp;&nbsp;<span class="label label-warning">并且必须配置默认数据库</span>&nbsp;&nbsp;</p>
+                <p>建议使用 query 接口进行数据库操作</p>
+                <p>
+                    <img src="./assets/img/statement/db.jpg" alt="">
+                </p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'log'" :title="'查看日志'">
+            <div slot="content">
+                <p>这里的日志分为&nbsp;&nbsp;<span class="label label-info">五类</span>，分别为<span class="label label-default">未分类</span>&nbsp;&nbsp;<span class="label label-default">错误</span>&nbsp;&nbsp;<span class="label label-default">通过</span>&nbsp;&nbsp;<span class="label label-default">系统</span>&nbsp;&nbsp;<span class="label label-info">运行过程</span>&nbsp;&nbsp;</p>
+                <p>各种日志之间是存储在不同文件中的，同时提供了一个解析本地日志的功能，在爬取过程中将可以导出所有&nbsp;&nbsp;<span class="label label-info">运行过程</span>&nbsp;&nbsp;日志</p>
+                <p>除了&nbsp;&nbsp;<span class="label label-info">运行过程</span>&nbsp;&nbsp;日志外的日志无法导出，但可以在程序文件夹中复制到。</p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'method'" :title="'配置参数生成策略'">
+            <div slot="content">
+                <p>考虑到爬虫过程的请求信息可能是动态的，这里提供生成策略</p>
+                <p>策略可以使用在&nbsp;&nbsp;<span class="label label-default">URL 生成</span>&nbsp;&nbsp;<span class="label label-default">请求参数</span>&nbsp;&nbsp;<span class="label label-default">头部参数</span>&nbsp;&nbsp;</p>
+                <p>对于使用&nbsp;&nbsp;<span class="label label-info">Get</span>&nbsp;&nbsp;<span class="label label-info">Post</span>&nbsp;&nbsp;请求的内容，头部请求才会有效</p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'pageParam'" :title="'配置爬取页面信息'">
+            <div slot="content">
+                <p>这里配置爬取一个页面所需的所有信息，包括 Url、头部参数、请求参数、爬取后处理方法</p>
+                <p>为了方便编写调试爬取后处理函数，这里提供了一个全局接口 debuggingRes</p>
+                <p><img src="./assets/img/statement/spiderSettingDebug.jpg" alt=""></p>
+                <p><img src="./assets/img/statement/spiderSettingDebug.one.jpg" alt=""></p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'previewDear'" :title="'配置模拟页预处理脚本'">
+            <div slot="content">
+                <p>这里配置的是爬取方式为&nbsp;&nbsp;<span class="label label-info">通过模拟浏览器获取页面</span>&nbsp;&nbsp;时，在模拟浏览器将页面进行加载过程中对页面进行脚本注入，获取页面的部分信息。</p>
+                <p>这里的一个缺陷是，无法进行登陆信息的缓存，预设置。</p>
+                <p>该脚本的主要工作是获取页面的部分信息保存为本地文件后，重新读取后进行处理，弥补&nbsp;&nbsp;<span class="label label-default">Get</span>&nbsp;&nbsp;<span class="label label-default">Post</span>&nbsp;&nbsp;请求无法获取加载脚本的 dom 页面，和弥补&nbsp;&nbsp;<span class="label label-default">直接获取页面</span>&nbsp;&nbsp;遭受跨域失败的尴尬的中间方案</p>
+                <p>
+                    <img src="./assets/img/statement/corFailOne.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/corFailTwo.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/corFailThree.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/corFailFour.jpg" alt="">
+                </p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'spider'" :title="'爬取'">
+            <div slot="content">
+                <p>这里可以开始进行爬取页面，同时需要先配置一个&nbsp;&nbsp;<span class="label label-default">工作路径</span>&nbsp;&nbsp;用于存放爬取过程中产生的临时文件</p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'api'" :title="'接口说明'">
+            <div slot="content">
+                <p>&nbsp;&nbsp;<span class="label label-default">eventManager.events.*</span>&nbsp;&nbsp;包含了所有的已经进行过包装的接口，使用方法也是固定的</p>
+                <p>
+                    eventManager.run(eventManager.events.*1.*2,function(ret){},param,"logType");<br/>
+                    *1&nbsp;可以是&nbsp;mysql、log、request、createMethods、requestManager、file&nbsp;<br/>
+                    *2&nbsp;是每个类别下的小项<br/>
+                    其中回调函数的&nbsp;ret[0]&nbsp;为错误对象，当该对象为逻辑&nbsp;false&nbsp;时，表示没有发生错误<br/>
+                    logType&nbsp;的取值可以是&nbsp;error&nbsp;pass&nbsp;split&nbsp;join
+                </p>
+                <p>
+                    <img src="./assets/img/statement/eventManager.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/eventManager.run.one.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/eventManager.run.two.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/eventManager.run.three.jpg" alt=""><br/>
+                    <img src="./assets/img/statement/eventManager.run.four.jpg" alt=""><br/>
+                </p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'selfDefined'" :title="'自定义接口说明'">
+            <div slot="content">
+                <p>
+                    <h4>后台方法的定义</h4>
+                    <img src="./assets/img/statement/event.defined.one.jpg" alt="">
+                </p>
+                <p>
+                    <h4>前端对后台方法的统一配置</h4>
+                    <img src="./assets/img/statement/event.defined.two.jpg" alt="">
+                </p>
+                <p>
+                    <h4>前端调用</h4>
+                    <img src="./assets/img/statement/event.defined.three.jpg" alt="">
+                </p>
+                <p>
+                    这里有一个规范，后台返回的参数，第一个参数默认为错误对象，如果对象为逻辑True表示后台执行发生错误。
+                </p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'example-one'" :title="'用例一'">
+            <div slot="content">
+                <p>
+                    <h3>服务器(Node Express4)</h3>
+                    <img src="./assets/img/example-one/server.png" alt="">
+                </p>
+                <p>
+                    <h3>参数生成策略</h3>
+                    <img src="./assets/img/example-one/paramSetting.png" alt="">
+                </p>
+                <p>
+                    <h3>爬取配置</h3>
+                    <img src="./assets/img/example-one/spiderSetting.png" alt="">
+                </p>
+                <p>
+                    <h3>爬取</h3>
+                    <img src="./assets/img/example-one/spider.png" alt="">
+                </p>
+                <p>
+                    <h3>结果</h3>
+                    <img src="./assets/img/example-one/result.png" alt="">
+                </p>
+            </div>
+        </v-collapse>
+        <v-collapse :ind="'example-two'" :title="'用例二'">
+            <div slot="content">
+                <p>
+                    <h4>爬取页面预处理</h4>
+                    <img src="./assets/img/example-two/preDear.jpg" alt="">
+                </p>
+                <p>
+                    <h4>爬取配置</h4>
+                    <img src="./assets/img/example-two/spiderSetting.jpg" alt="">
+                </p>
+                <p>
+                    <h4>爬取</h4>
+                    <img src="./assets/img/example-two/spider.jpg" alt="">
+                </p>
+                <p>
+                    <h4>爬取结果</h4>
+                    <img src="./assets/img/example-two/result.jpg" alt="">
+                </p>
+            </div>
+        </v-collapse>
+    </div>
+</div>
+
+<script>
+    Vue.component("vCollapse",{
+        template :
+            '<div class="panel panel-default">\
+                <div class="panel-heading" role="tab" id="headingOne">\
+                    <h4 class="panel-title">\
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" :href="\'#collapse\' + ind" aria-expanded="true">\
+                            {{title}}\
+                        </a>\
+                    </h4>\
+                </div>\
+                <div :id="\'collapse\' + ind" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">\
+                    <div class="panel-body">\
+                        <slot name="content"></slot>\
+                    </div>\
+                </div>\
+            </div>',
+        props : ['title','ind']
+    });
+
+    var vm = new Vue({
+        el : "#accordion",
+        data : {
+        }
+    })
+</script>

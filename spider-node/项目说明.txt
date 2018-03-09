@@ -1,0 +1,10 @@
+1.所有的配置放置在 setting 目录中
+2.生成策略放置在 setting/createMethods 中
+    这里的管理仅仅使用简单的文件管理
+3.请求配置放置在 setting/request 中
+    这里的管理添加一个时间管理
+    这里使用 json 结构，结构见 testone
+4.日志文件放置在 logs 中
+5.后台工具类放置在 util 文件夹下
+    其中的 fetchEventDear.js 和 前端文件 VIEW/assets/js/eventManager.js 内容相对应
+6.通过 get 和 post 请求获取的内容可以直接被编辑，而通过 page （直接获取页面） 方法获取的内容为一个网页，通过页面处理方式进行处理

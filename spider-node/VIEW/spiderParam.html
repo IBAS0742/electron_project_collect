@@ -1,0 +1,178 @@
+<!-- Bootstrap core CSS     -->
+<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Animation library for notifications   -->
+<link href="assets/css/animate.min.css" rel="stylesheet"/>
+
+<!--   Core JS Files   -->
+<script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="assets/js/child.js"></script>
+<script src="assets/js/vue.min.js"></script>
+<script src="assets/component/card.js"></script>
+<script src="assets/component/vInput.js"></script>
+
+
+<div id="main" style="padding: 0.5em;width: 100%;">
+    <div v-show="listView">
+        <div class="btn-group">
+            <button type="button" @click.prevent="create" class="btn btn-default">新增方法</button>
+        </div>
+        <v-card>
+            <table class="table table-hover table-striped" slot="content">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(cm,ind) in createMethods" :key="ind">
+                    <td>{{cm}}</td>
+                    <td>
+                        <button class="btn btn-info" @click.prevent="update(cm)">修改</button>
+                        <button class="btn btn-info" @click.prevent="remove(cm)">删除</button>
+                        <button class="btn btn-info" @click.prevent="update(cm)">测试</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </v-card>
+    </div>
+    <div v-show="!listView">
+        <div class="btn-group" style="padding: 0px 15px;">
+            <button type="button" @click.prevent="back" class="btn btn-info">返回</button>
+            <button type="button" @click.prevent="submit" class="btn btn-success">提交</button>
+        </div>
+        <v-input :inp="methodName" style="width:100%;"></v-input>
+        <div class="form-group" style="padding: 0 15px;">
+            <label v-html="methodFunction.label"></label>&nbsp;&nbsp;<span @click.prevent="recover" class="label label-success" style="cursor:pointer;">恢复函数形状</span>
+            <textarea class="form-control" style="min-width: 100%;max-width: 100%;" v-model="methodFunction.value" name="" id="" cols="30" rows="10"></textarea>
+        </div>
+        <hr/>
+        <div style="padding: 0px 15px;">
+            <h2 style="padding-left: 15px;">测试</h2>
+            <v-input :inp="param1"></v-input>
+            <v-input :inp="param2" :type="'number'"></v-input>
+            <div class="btn-group" style="padding: 0px 15px;">
+                <button type="button" @click.prevent="test" class="btn btn-default">运行测试</button>
+            </div>
+            <div style="padding: 10px 15px;">
+                <div class="alert alert-info">
+                    <span>运行结果&nbsp;&nbsp;&nbsp;&nbsp;{{result}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var vm = new Vue({
+        el : "#main",
+        data : {
+            createMethods : [],
+            listView : true,
+            methodName : {
+                label : "方法名",
+                value : "",
+                error : ""
+            },
+            methodFunction : {
+                label : "函数体",
+                value : ""
+            },
+            param1 : {
+                label : "参数一",
+                value : ""
+            },
+            param2 : {
+                label : "参数二",
+                value : ""
+            },
+            result : ""
+        },
+        methods : {
+            recover : function () {
+                this.methodFunction.value = "/**\n * val 设置值\n * times 请求次数\n */\nfunction (val,times) {\n\t/* 函数内容 */\n\treturn val;\n}";
+            },
+            create : function () {
+                this.methodName.value = "";
+                this.methodFunction.value = "/**\n * val 设置值\n * times 请求次数\n */\nfunction (val,times) {\n\t/* 函数内容 */\n\treturn val;\n}";
+                this.listView = false;
+            },
+            update : function (name) {
+                eventManager.run(eventManager.events.createMethods.fetch ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取函数体发生错误，已经记入日志");
+                    } else {
+                        ret = ret[1].split("\n");
+                        ret.shift();
+                        this.methodName.value = name;
+                        this.methodFunction.value = ret.join("\n");
+                        this.listView = false;
+                    }
+                }.bind(this),name,"error");
+            },
+            test : function () {
+                try {
+                    eval("var testFn = " + vm.methodFunction.value);
+                } catch (e) {
+                    notify(null,"请检查函数是否有错误");
+                }
+                this.result = testFn(this.param1.value,this.param2.value);
+            },
+            refreshMethods : function () {
+                eventManager.run(eventManager.events.createMethods.getAll ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取生成方法失败");
+                    } else {
+                        ret = ret[1];
+                        this.createMethods = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.createMethods.push(ret[i].substring(0,ret[i].length - 3));
+                        }
+                    }
+                }.bind(this));
+            },
+            remove : function (name) {
+                var isOk = confirm("确认后将永久删除!!!","确定删除该方法？");
+                if (isOk) {
+                    eventManager.run(eventManager.events.createMethods.delete,function (ret) {
+                        if (ret[0]) {
+                            notify(null,"删除失败");
+                        } else {
+                            notify(null,"删除成功");
+                            this.refreshMethods();
+                        }
+                    }.bind(this),name,"error");
+                }
+            },
+            submit : function () {
+                if (this.methodName.value && this.methodFunction.value) {
+                    eventManager.run(eventManager.events.createMethods.create ,function (ret) {
+                        if (ret[0]) {
+                            notify(null,"提交发生错误，已经记入日志");
+                        } else {
+                            notify(null,"提交成功");
+                            eventManager.events.createMethods.refreshCreateMethods(window.parent.$,this.methodName.value + ".js");
+                        }
+                    }.bind(this),{
+                        name : this.methodName.value,
+                        function : this.methodFunction.value
+                    },"error");
+                } else {
+                    notify(null,"请填写完整信息后继续");
+                }
+            },
+            back : function () {
+                this.listView = true;
+                this.refreshMethods();
+            }
+        },
+        mounted : function () {
+            this.refreshMethods();
+        }
+    })
+</script>
+
+

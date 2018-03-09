@@ -1,0 +1,1 @@
+{"dear":"function(){}","headerParams":[{"defaultValue":"application/json","method":"defaultValue","paramName":"content-type"}],"requestParams":[{"defaultValue":"1","method":"defaultValue","paramName":"p1"}],"requestUrl":{"method":"defaultValue","type":"Get","url":"http://www.baidu.com"}}

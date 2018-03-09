@@ -1,0 +1,16 @@
+[
+    {
+        "url" : "",
+        "method" : "",
+        "headers" : {
+            "content-type" : "application/json"
+        },
+        "params" : [
+            {
+                "name" : "参数名称",
+                "createMethod" : "生成策略",
+                "value" : "原生取值"
+            }
+        ]
+    }
+]

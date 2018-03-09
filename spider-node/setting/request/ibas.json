@@ -1,0 +1,1 @@
+{"headerParams":[{"defaultValue":"bing","method":"defaultValue","paramName":"bing"}],"requestParams":[{"defaultValue":"ibas","method":"defaultValue","paramName":"ibas"}],"requestUrl":{"method":"defaultValue","type":"Post","url":"http://www.sunibas.cn"}}

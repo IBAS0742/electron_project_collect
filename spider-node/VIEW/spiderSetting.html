@@ -1,0 +1,534 @@
+<!-- Bootstrap core CSS     -->
+<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Animation library for notifications   -->
+<link href="assets/css/animate.min.css" rel="stylesheet"/>
+
+<!--   Core JS Files   -->
+<script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="assets/js/child.js"></script>
+<script src="assets/js/vue.min.js"></script>
+<script src="assets/component/card.js"></script>
+<script src="assets/component/vInput.js"></script>
+<style>
+    .row .input-group {
+        margin-bottom: 0.5em;
+    }
+</style>
+
+<div id="main" style="padding: 0.5em;width: 100%;">
+    <div v-show="listView">
+        <div class="btn-group">
+            <button type="button" @click.prevent="create" class="btn btn-default">新增配置</button>
+        </div>
+        <v-card>
+            <table class="table table-hover table-striped" slot="content">
+                <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(setting,ind) in settings" :key="ind">
+                    <td>{{setting}}</td>
+                    <td>
+                        <button class="btn btn-info" @click.prevent="update(setting)">修改</button>
+                        <button class="btn btn-info" @click.prevent="update(setting)">测试</button>
+                        <button class="btn btn-info" @click.prevent="remove(setting)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </v-card>
+    </div>
+    <div v-show="!listView">
+        <div class="btn-group">
+            <button type="button" @click.prevent="back" class="btn btn-info" style="margin-bottom: 0.5em;">返回列表</button>
+            <div class="input-group" style="float:right;width: 60%;">
+                <span class="input-group-addon btn-success" style="cursor: pointer;color: #fff;background: #5cb85c;" @click.prevent="save">保存</span>
+                <input type="text" class="form-control" v-model="settingName" aria-label="url" placeholder="配置名称">
+            </div>
+        </div>
+        <!-- 配置页面路由信息 -->
+        <div class="row" style="margin: 0px;width: 100%;">
+            <div class="input-group">
+                <span class="input-group-addon">请求方式</span>
+                <div class="input-group-btn" style="width: 50%;">
+                    <button style="width: 100%;" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{requestType}}<span class="caret" style="float: right;margin-top: 8px;"></span>
+                    </button>
+                    <ul style="width: 100%;" class="dropdown-menu">
+                        <li><a @click="requestType='Post'" href="#">Post</a></li>
+                        <li><a @click="requestType='Get'" href="#">Get</a></li>
+                        <li><a @click="requestType='Page'" href="#">直接获取页面</a></li>
+                        <li><a @click="requestType='mPage'" href="#">通过模拟浏览器获取页面</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">请求地址</span>
+                <div class="input-group-btn">
+                    <button type="button" style="width: 100px;" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{requestHead}}<span class="caret" style="float: right;margin-top: 8px;"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a @click="requestHead='http://'" href="#">http://</a></li>
+                        <li><a @click="requestHead='https://'" href="#">https://</a></li>
+                    </ul>
+                </div>
+                <input type="text" class="form-control" v-model="url" aria-label="url" placeholder="请求地址">
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">地址参数策略</span>
+                <div class="input-group-btn" style="width: 60%;">
+                    <button style="width: 100%;" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{urlMethod}}<span class="caret" style="float: right;margin-top: 8px;"></span>
+                    </button>
+                    <ul style="width: 100%;" class="dropdown-menu">
+                        <li v-for="(cm,ind) in createMethods" :key="ind">
+                            <a @click="urlMethod=cm" href="#">{{cm}}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <v-collapse :ind="'dearMethod'" :title="'配置处理函数'">
+            <div slot="content">
+                <div class="form-group">
+                    <label>内容处理函数</label>
+                    <textarea class="form-control" style="min-width: 100%;max-width: 100%;" v-model="dear" cols="30" rows="10"></textarea>
+                </div>
+            </div>
+        </v-collapse>
+        <!-- 配置请求参数信息 -->
+        <hr/>
+
+        <v-collapse :ind="'requestParam'" :title="'配置请求参数'">
+            <div slot="content">
+                <div class="btn-group">
+                    <button type="button" @click.prevent="addRequestParam" class="btn btn-default">添加请求参数</button>
+                </div>
+                <param-input v-for="(p,ind) in requestParams" :key="ind"
+                             :create-methods="createMethods" :ind="ind"
+                             :param="p" @delete="deleteRequestParam"></param-input>
+            </div>
+        </v-collapse>
+        <hr/>
+        <v-collapse :ind="'headerParam'" :title="'配置头部参数'">
+            <div slot="content">
+                <div class="btn-group">
+                    <button type="button" @click.prevent="addHeaderParam" class="btn btn-default">添加头部参数</button>
+                </div>
+                <param-input v-for="(p,ind) in headerParams" :key="ind"
+                             :create-methods="createMethods" :ind="ind"
+                             :param="p" @delete="deleteHeaderParam"></param-input>
+            </div>
+        </v-collapse>
+
+        <!-- 配置动态请求信息 -->
+        <!-- 预览页面 -->
+        <div class="btn-group">
+            <div class="input-group" style="width: 50%;padding-left: 0;padding-right: 2px;margin: 8px 0;float:left;">
+                <span class="input-group-addon" @click="preview">预览请求内容</span>
+                <input type="text" class="form-control" v-model="requestTime" aria-label="url" placeholder="请求第 n 次页面">
+            </div>
+            <button class="btn btn-info" @click="closePreview" style="margin: 0.5em 0;">关闭预览</button>
+            <button class="btn btn-info" @click="savePreview" style="margin: 0.5em 0;">保存预览内容</button>
+        </div>
+        <div ref="preview" style="border: 1px solid;display: none;margin-bottom: 0.5em;">
+            <iframe ref="previewIframe" src="blank.html" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    var loaded;
+    var intervalId;
+
+    var nextProxy = new Proxy({
+        time : 0
+    },{
+        set: function(obj, prop, value) {
+            if (prop == "time") {
+                notify("","测试页不进行迭代运行机制");
+            }
+        }
+    });
+
+    Vue.component("vCollapse",{
+        template :
+            '<div class="panel panel-default">\
+                <div class="panel-heading" role="tab" id="headingOne">\
+                    <h4 class="panel-title">\
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" :href="\'#collapse\' + ind" aria-expanded="true">\
+                            {{title}}\
+                        </a>\
+                    </h4>\
+                </div>\
+                <div :id="\'collapse\' + ind" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">\
+                    <div class="panel-body">\
+                        <slot name="content"></slot>\
+                    </div>\
+                </div>\
+            </div>',
+        props : ['title','ind']
+    });
+    Vue.component("paramInput",{
+        template :
+            '<div class="input-group" style="padding-top: 0.5em;">\
+                <input type="text" class="form-control" v-model="param.paramName" aria-label="url" placeholder="参数名称">\
+                <div class="input-group-btn" style="min-width: 200px;max-width: 200px;">\
+                    <button style="width: 100%;" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                        {{param.method}}<span class="caret" style="float: right;margin-top: 8px;"></span>\
+                    </button>\
+                    <ul class="dropdown-menu">\
+                        <li v-for="(cm,ind) in createMethods" :key="ind">\
+                            <a @click="param.method=cm" href="javascript:;">{{cm}}</a>\
+                        </li>\
+                    </ul>\
+                </div>\
+                <input type="text" class="form-control" v-model="param.defaultValue" aria-label="url" placeholder="默认值">\
+                <span class="input-group-addon" style="cursor:pointer;" @click.prevent="deleteThis">删除</span>\
+            </div>',
+        props : ['createMethods','param','ind'],
+        methods : {
+            deleteThis : function () {
+                console.log("ret");
+                this.$emit("delete",this.ind);
+            }
+        }
+    });
+    var vm = new Vue({
+        el : "#main",
+        data : {
+            listView : true,
+            settings : [],
+            settingName : "",
+            url : "",
+            requestType : "Post",
+            requestHead : "http://",
+            createMethods : [],
+            urlMethod : "default",
+            requestTime : 0,
+            requestParams : [],
+            headerParams : [],
+            dear : "",
+            workDir : ""
+        },
+        methods : {
+            //获取所有的配置信息
+            refreshSetting : function () {
+                eventManager.run(eventManager.events.requestManager.getAll ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取配置失败");
+                    } else {
+                        ret = ret[1];
+                        this.settings = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.settings.push(ret[i].substring(0,ret[i].length - 5));
+                        }
+                    }
+                }.bind(this),null,"error");
+            },
+            saveSetting : function () {
+            },
+            refreshMethods : function (cb) {
+                eventManager.run(eventManager.events.createMethods.getAll ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取生成方法失败");
+                    } else {
+                        ret = ret[1];
+                        this.createMethods = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.createMethods.push(ret[i].substring(0,ret[i].length - 3));
+                        }
+                        cb();
+                    }
+                }.bind(this),null,"error");
+            },
+            update : function (setting) {
+                this.closePreview();
+                this.settingName = setting;
+                this.selectedSetting = setting;
+                eventManager.run(eventManager.events.requestManager.fetch ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取失败，已记录到日志中");
+                    } else {
+                        ret = JSON.parse(ret[1]);
+                        notify(null,"获取成功");
+                        this.settingName = "";
+                        this.requestParams = ret.requestParams;
+                        this.headerParams = ret.headerParams;
+                        if (ret.requestUrl.url.indexOf("http:") + 1) {
+                            this.url = ret.requestUrl.url.substring(7);
+                            this.requestHead = "http://";
+                        } else {
+                            this.url = ret.requestUrl.url.substring(8);
+                            this.requestHead = "https://";
+                        }
+                        this.requestType = ret.requestUrl.type;
+                        this.listView = false;
+                        this.settingName = setting;
+                        this.dear = ret.dear;
+                        console.log(ret);
+                    }
+                }.bind(this),setting,"error");
+            },
+            remove : function (setting) {
+                var isOk = confirm("确认后将永久删除!!!","确定删除该方法？");
+                if (isOk) {
+                    eventManager.run(eventManager.events.requestManager.delete,function (ret) {
+                        if (ret[0]) {
+                            notify(null,"删除失败");
+                        } else {
+                            notify(null,"删除成功");
+                            this.refreshSetting();
+                        }
+                    }.bind(this),setting,"error");
+                }
+            },
+            create : function () {
+                this.closePreview();
+                this.settingName = "";
+                this.requestParams = [];
+                this.headerParams = [];
+                this.url = "";
+                this.requestType = "Post";
+                this.requestHead = "http://";
+                this.settingName = "";
+                this.dear =
+'/**\n\
+* 如果这里是使用 get 或者 post 或者 mPage 请求，则这里 res 为请求返回内容\n\
+* 如果为 page （直接获取页面） 则 res 为 返回页面的 $(document) 对象的函数，并且该函数会在页面加载完成时执行\n\
+* req 为请求的所有参数 包括 url headers params\n\
+* times 为请求次数\n\
+* */\n\
+function loaded(req,times,res) {\n\
+\t/**\n\
+\t* 这里可以使用 $ 即 jq 对象\n\
+\t* 可以使用 eventManager.events.mysql 中的接口将数据录入数据库\n\
+\t* 也可以使用 eventManager 中的 query 单独定义的方法\n\
+\t* 也可以使用 eventManager.events.file 中的接口将数据保存为本地文件\n\
+\t* 也可以使用 eventManager 中的 writeFile appendFile \n\
+\t* 调用 nextProxy.time += 1; 会执行下一次调用\n\
+\t* */\n\
+}';
+                this.listView = false;
+            },
+            save : function () {
+                //生成一个 json
+                if (!this.settingName) {
+                    notify(null,"请输入配置名称");
+                    return ;
+                }
+                var json = {
+                    name : this.settingName,
+                    obj : {
+                        requestParams : this.requestParams,
+                        headerParams : this.headerParams,
+                        requestUrl : {
+                            "url" : this.requestHead + this.url,
+                            "type" : this.requestType,
+                            "method" : this.urlMethod
+                        },
+                        dear : this.dear
+                    }
+                };
+                eventManager.run(eventManager.events.requestManager.create,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"发生错误，已记入日志");
+                    } else {
+                        notify(null,"保存成功");
+                        this.refreshSetting();
+                    }
+                }.bind(this),json,"error");
+            },
+            preview : function () {
+                clearInterval(intervalId);
+                if (!this.workDir) {
+                    var dir;
+                    dir = dialog.showOpenDialog ({
+                        properties : ["openDirectory"]
+                    });
+                    if (dir) {
+                        this.workDir = dir[0];
+                        eventManager.workDir = this.workDir;
+                    } else {
+                        return;
+                    }
+                }
+                if (this.url && this.requestType) {
+                    var pass = true,
+                        times = this.requestTime;
+                    /**
+                     * 生成请求参数
+                     * */
+                    var requestParam = {},
+                        headerParam = {},
+                        url = this.requestHead + this.url;
+                    this.requestParams.forEach(function (obj) {
+                        if (obj.method == "请选择策略" && (this.createMethods.indexOf(obj.method) + 1)) {
+                            pass = false;
+                            notify("","请选择一个合适并存在的策略");
+                            return;
+                        } else {
+                            requestParam[obj.paramName] = createMethods[obj.method](obj.defaultValue,times);
+                        }
+                    });
+                    this.headerParams.forEach(function (obj) {
+                        if (obj.method == "请选择策略" && (this.createMethods.indexOf(obj.method) + 1)) {
+                            pass = false;
+                            notify("","请选择一个合适并存在的策略");
+                            return;
+                        } else {
+                            headerParam[obj.paramName] = createMethods[obj.method](obj.defaultValue,times);
+                        }
+                    });
+                    //生成 url
+                    if (this.createMethods.indexOf(this.urlMethod) + 1) {
+                        url = createMethods[this.urlMethod](url,times);
+                    } else {
+                        notify("","请为 url 选择一个合适并存在的生成策略");
+                        return ;
+                    }
+                    if (this.dear) {
+                        eval("window.loaded = " + this.dear);
+                    } else {
+                        window.loaded = function () {};
+                    }
+                    var param_ = {
+                        url : url,
+                        type : this.type,
+                        form : requestParam,
+                        headers : headerParam
+                    };
+                    if (pass) {
+                        loading.time++;
+                        if (this.requestType.toLowerCase() == "page") {
+                            var p = [];
+                            for (var i in requestParam) {
+                                p.push(i + "=" + requestParam[i]);
+                            }
+                            this.$refs.preview.style.display = "block";
+                            window.parent.debuggingRes =
+                                this.$refs.previewIframe.onload =
+                                    loaded.bind(null,param_,this.requestTime,function () {
+                                return $(vm.$refs.previewIframe.contentWindow.document);
+                            });
+                            this.$refs.previewIframe.src = url + "?" + p.join("&");
+                            loading.time--;
+                        } else if (this.requestType.toLowerCase() == "mpage") {
+                            //清空后台数据
+                            eventManager.run(eventManager.events.file.fetchSaveDom,() => {});
+                            window.parent.debuggingRes =
+                                this.$refs.previewIframe.onload =
+                                    loaded.bind(null,param_,this.requestTime,function () {
+                                return $(vm.$refs.previewIframe.contentWindow.document);
+                            });
+                            //配置后台转发 url
+                            var p = [];
+                            for (var i in requestParam) {
+                                p.push(i + "=" + requestParam[i]);
+                            }
+                            ipc.send("fetchFore",{
+                                view : "viewOP",
+                                url : url + "?" + p.join("&")
+                            });
+                            //监听
+                            intervalId = setInterval(function () {
+                                eventManager.run(eventManager.events.file.fetchSaveDom,function (ret) {
+                                    if (ret[0] == "saving") {
+                                        return ;
+                                    }
+                                    loading.time--;
+                                    clearInterval(intervalId);
+                                    if (ret[0]) {
+                                        notify(null,"发生错误");
+                                    } else {
+                                        vm.$refs.preview.style.display = "block";
+                                        vm.$refs.previewIframe.contentWindow.document.body.innerHTML = ret[1];
+                                        vm.$refs.previewIframe.onload();
+                                    }
+                                });
+                            },500);
+                        } else {
+                            eventManager.run(eventManager.events.request[this.requestType.toLowerCase()],function (ret) {
+                                loading.time--;
+                                if (ret[0]) {
+                                    notify(null,"发生错误");
+                                } else {
+                                    this.$refs.preview.style.display = "block";
+                                    this.$refs.previewIframe.contentWindow.document.body.innerHTML = ret[2];
+                                    loaded(param_,this.requestTime,ret[2]);
+                                    window.parent.debuggingRes = ret[2];
+                                }
+                            }.bind(this),param_,"error");
+                        }
+                    }
+                } else {
+                    notify(null,"请先填写一个 url 地址");
+                }
+            },
+            savePreview : function () {
+                var path = dialog.showSaveDialog({
+                    title : "title",
+                    buttonLabel : "这样就好 o(*￣▽￣*)ブ"
+                });
+                if (path) {
+                    eventManager.run(eventManager.events.request.save,function (ret) {
+                        if (ret[0]) {
+                            notify(null,ret[0]);
+                        } else {
+                            notify(null,"保存成功");
+                        }
+                    },path,"error");
+                }
+            },
+            closePreview : function () {
+                this.$refs.preview.style.display = "none";
+                this.$refs.previewIframe.contentWindow.document.body.innerHTML = "";
+            },
+            addRequestParam : function () {
+                this.requestParams.unshift({
+                    method : "请选择策略",
+                    defaultValue : "",
+                    paramName : ""
+                })
+            },
+            deleteRequestParam : function (ind) {
+                this.requestParams.splice(ind,1);
+            },
+            addHeaderParam : function () {
+                this.headerParams.unshift({
+                    method : "请选择策略",
+                    defaultValue : "",
+                    paramName : ""
+                })
+            },
+            deleteHeaderParam : function (ind) {
+                this.headerParams.splice(ind,1);
+            },
+            back : function () {
+                this.listView = true;
+                this.refreshSetting();
+            }
+        },
+        mounted : function () {
+            this.refreshMethods(function () {
+                if (this.createMethods.length) {
+                    this.urlMethod = this.createMethods[0];
+                } else {
+                    this.urlMethod = "找不到可用的生成策略，请先创建";
+                    notify(null,"找不到生成策略");
+                }
+                this.refreshSetting();
+                window.createMethods = window.parent.createMethods;
+            }.bind(this));
+            eventManager.workDir = "";
+        }
+    })
+</script>

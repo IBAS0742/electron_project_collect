@@ -1,0 +1,198 @@
+
+<!-- Bootstrap core CSS     -->
+<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Animation library for notifications   -->
+<link href="assets/css/animate.min.css" rel="stylesheet"/>
+
+<!--   Core JS Files   -->
+<script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="assets/js/child.js"></script>
+<script src="assets/js/vue.min.js"></script>
+<script src="assets/component/vInput.js"></script>
+
+<div id="main">
+    <div class="row" style="padding: 0.5em;width: 100%;">
+        <div class="col-md-6">
+            <div class="btn-group">
+                <button :class="stateClass" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{stateHTML}}<span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="#" @click.prevent="openConnection">开启</a></li>
+                    <li><a href="#" @click.prevent="closeConnection">关闭</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="padding: 0.5em;width: 100%;">
+        <v-input v-for="(dbi,ind) in connectDBInput" :key="ind" :inp="dbi"></v-input>
+    </div>
+    <div class="row" style="padding: 0.5em;width: 100%;">
+        <div class="col-md-6">
+            <div class="form-group">
+                <button class="btn btn-info" @click="submit">提交修改</button>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="padding: 0.5em;width: 100%;">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button @click.prevent="changeDB" class="btn btn-default" type="button">修改默认数据库</button>
+                </span>
+                <select class="form-control" v-model="dbname">
+                    <option v-for="(DB,ind) in DBS" :key="ind" :value="DB" v-html="DB"></option>
+                </select>
+            </div><!-- /input-group -->
+        </div>
+    </div>
+    <div class="row" style="padding: 0.5em;width: 100%;">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button @click.prevent="changeTable" class="btn btn-default" type="button">修改默认数据表</button>
+                </span>
+                <select class="form-control" v-model="tablesName">
+                    <option v-for="(table,ind) in tables" :key="ind" :value="table" v-html="table"></option>
+                </select>
+            </div><!-- /input-group -->
+        </div>
+    </div>
+</div>
+
+<script>
+    var vm = new Vue({
+        el : "#main",
+        data : {
+            connectDBInput : {
+                host : {
+                    label : "数据库地址",
+                    value : "",
+                    error : ""
+                },
+                user : {
+                    label : "数据库用户名",
+                    value : "",
+                    error : ""
+                },
+                password : {
+                    label : "数据库密码",
+                    value : "",
+                    error : ""
+                },
+            },
+            stateHTML : "数据库未开启",
+            stateClass : "btn btn-default dropdown-toggle btn-info",
+            DBS : [],
+            dbname : "",
+            tables : [],
+            tablesName : ""
+        },
+        methods : {
+            refresh : function () {
+                for (var i in baseSetting.mysql) {
+                    this.connectDBInput[i].value = baseSetting.mysql[i];
+                }
+            },
+            submit : function () {
+                var data = {};
+                for (var i in this.connectDBInput) {
+                    if (this.connectDBInput[i].value) {
+                        data[i] = this.connectDBInput[i].value;
+                    }
+                }
+                eventManager.run(eventManager.events.mysql.connetctionParam,function (ret) {
+                    if (ret[0]) {
+                        notify(null,ret[0]);
+                    } else {
+                        baseSetting.mysql = ret[1];
+                        notify(null,"修改成功");
+                        this.refresh();
+                    }
+                }.bind(this),data);
+            },
+            openConnection : function () {
+                eventManager.run(eventManager.events.mysql.openConnection,function (ret) {
+                    baseSetting.mysqlState = true;
+                    this.toggleMysqlState(true);
+                    notify(null,"成功开启数据库");
+                }.bind(this));
+            },
+            closeConnection : function () {
+                eventManager.run(eventManager.events.mysql.closeConnection,function (ret) {
+                    baseSetting.mysqlState = false;
+                    this.toggleMysqlState(false);
+                    notify(null,"成功关闭数据库");
+                }.bind(this));
+            },
+            toggleMysqlState : function (state) {
+                if (state) {
+                    this.stateHTML = "数据库已开启";
+                    var stateClass = this.stateClass.split(" ");
+                    stateClass.pop();
+                    stateClass.push("btn-success");
+                    this.stateClass = stateClass.join(" ");
+                    this.initDBS();
+                } else {
+                    this.stateHTML = "数据库未开启";
+                    var stateClass = this.stateClass.split(" ");
+                    stateClass.pop();
+                    stateClass.push("btn-info");
+                    this.stateClass = stateClass.join(" ");
+                }
+            },
+            initDBS : function () {
+                eventManager.run(eventManager.events.mysql.fetchDBS,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"数据库连接错误<br/>已经记录到错误日志中");
+                    } else {
+                        ret = ret[1];
+                        this.DBS = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.DBS.push(ret[i].dbname);
+                        }
+                    }
+                }.bind(this),null,"error");
+            },
+            changeDB : function () {
+                if (this.dbname) {
+                    eventManager.run(eventManager.events.mysql.changeDB,function (ret) {
+                        baseSetting.mysqlDB = this.dbname;
+                        notify(null,"修改成功");
+                        this.initTables();
+                    }.bind(this),this.dbname);
+                }
+            },
+            initTables : function () {
+                baseSetting.mysqlTable = "";
+                eventManager.run(eventManager.events.mysql.query,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取数据表失败<br/>已经记录到错误日志中");
+                    } else {
+                        ret = ret[1];
+                        this.tables = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.tables.push(ret[i].table_name);
+                        }
+                    }
+                }.bind(this),"select table_name from information_schema.tables where TABLE_SCHEMA='" + this.dbname + "'","error");
+            },
+            changeTable : function () {
+                if (this.tablesName) {
+                    eventManager.run(eventManager.events.mysql.changeTable,function (ret) {
+                        baseSetting.mysqlTable = this.tablesName;
+                        notify(null,"修改成功");
+                    }.bind(this),this.tablesName);
+                }
+            }
+        },
+        mounted : function () {
+            this.refresh();
+            this.toggleMysqlState(baseSetting.mysqlState);
+            this.dbname = baseSetting.mysqlDB;
+            this.tablesName = baseSetting.mysqlTable;
+        }
+    })
+</script>

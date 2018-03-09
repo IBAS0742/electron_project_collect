@@ -1,0 +1,19 @@
+[2018-02-26T22:43:35.451] [INFO] process - {"0":null,"1":{"host":"localhost","user":"root","password":"include bing"}}
+[2018-02-26T22:43:35.459] [INFO] process - {"0":null,"1":false}
+[2018-02-26T22:43:35.467] [INFO] process - {"0":null,"1":["defaultValue.js","ibas-header.js","ibas-param.js","ibas-url.js","param-testone.js","testGetParam.js","testone.js","屋宇署.js"]}
+[2018-02-26T22:44:32.856] [INFO] process - {"0":null,"1":{"host":"localhost","user":"root","password":"include bing"}}
+[2018-02-26T22:44:32.865] [INFO] process - {"0":null,"1":false}
+[2018-02-26T22:44:32.885] [INFO] process - {"0":null,"1":["defaultValue.js","ibas-header.js","ibas-param.js","ibas-url.js","param-testone.js","testGetParam.js","testone.js","屋宇署.js"]}
+[2018-02-26T22:44:45.794] [INFO] process - {"0":null,"1":{"host":"localhost","user":"root","password":"include bing"}}
+[2018-02-26T22:44:45.805] [INFO] process - {"0":null,"1":false}
+[2018-02-26T22:44:45.812] [INFO] process - {"0":null,"1":["defaultValue.js","ibas-header.js","ibas-param.js","ibas-url.js","param-testone.js","testGetParam.js","testone.js","屋宇署.js"]}
+[2018-02-26T22:44:48.571] [INFO] process - {"0":null,"1":{"host":"localhost","user":"root","password":"include bing"}}
+[2018-02-26T22:44:48.603] [INFO] process - {"0":null,"1":false}
+[2018-02-26T22:44:48.630] [INFO] process - {"0":null,"1":["defaultValue.js","ibas-header.js","ibas-param.js","ibas-url.js","param-testone.js","testGetParam.js","testone.js","屋宇署.js"]}
+[2018-02-26T22:44:55.900] [INFO] process - {"0":null,"1":"//这里将函数定义为页面加载完成时运行，这里可以是获取页面的某一个信息，\n//获取成功后将信息发送到后端进行保存，\n//当前只能进行一次保存\nwindow.onload = function () {\n\t/*\n\tvar obj = [];\n\tArray.prototype.slice.call(\n\t\tdocument.getElementsByTagName(\"tbody\")[0]\n\t\t\t.getElementsByTagName(\"tr\")\n\t\t).forEach((tr) => {\n\t\t\tvar item = [];\n\t\t\tArray.prototype.slice.call(tr.children)\n\t\t\t\t.forEach((td) => {\n\t\t\t\t\titem.push(td.innerText);\n\t\t\t\t});\n\t\t\tobj.push(item);\n\t\t});\n\t*/\n\t//获取通信类\n\tconst ipc = require('electron').ipcRenderer;\n\t//发起和后端的通信\n\tipc.send(\"fetchFore\",{\n\t\t//调用后端的文件缓存方法\n\t\tevent : \"file-saveDom\",\n\t\t//将 header 和 body 两部分信息发送给后端保存 \n\t\t//param : JSON.stringify(obj),\n\t\tparam : document.head.innerHTML + document.body.innerHTML,\n\t\t//发生错误时进行日志记录\n\t\tlog : \"error\"\n\t});\n};"}
+[2018-02-26T22:46:04.356] [INFO] process - {"0":"","1":"设置成功"}
+[2018-02-26T22:46:04.377] [INFO] process - {"0":null,"1":[" f7.json","adf.json","electronAPI.json","github.json","halahala.json","ibas.json","localhost.json","testGetParam.json","testone.json","wuyushu.json"]}
+[2018-02-26T22:46:04.379] [INFO] process - {"0":"","1":"设置成功"}
+[2018-02-26T22:46:07.166] [INFO] process - {"0":null,"1":["defaultValue.js","ibas-header.js","ibas-param.js","ibas-url.js","param-testone.js","testGetParam.js","testone.js","屋宇署.js"]}
+[2018-02-26T22:46:07.181] [INFO] process - {"0":null,"1":[" f7.json","adf.json","electronAPI.json","github.json","halahala.json","ibas.json","localhost.json","testGetParam.json","testone.json","wuyushu.json"]}
+[2018-02-26T22:46:07.193] [INFO] process - {"0":"","1":"设置成功"}

@@ -1,0 +1,250 @@
+<!-- Bootstrap core CSS     -->
+<link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Animation library for notifications   -->
+<link href="assets/css/animate.min.css" rel="stylesheet"/>
+
+<!--   Core JS Files   -->
+<script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+<script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="assets/js/child.js"></script>
+<script src="assets/js/vue.min.js"></script>
+<script src="assets/component/card.js"></script>
+<script src="assets/component/vInput.js"></script>
+
+<style>
+    #main > .input-group {
+        margin-bottom:0.5em;
+    }
+</style>
+
+<div id="main" style="padding: 0.5em;width: 100%;">
+    <div class="input-group">
+        <span class="input-group-addon">选择一个配置项</span>
+        <div class="input-group-btn" style="width: 50%;">
+            <button style="width: 100%;" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{selectedSetting || '--- 请选择 ---'}}<span class="caret" style="float: right;margin-top: 8px;"></span>
+            </button>
+            <ul style="width: 100%;" class="dropdown-menu">
+                <li v-for="(setting,ind) in settings" :key="ind">
+                    <a @click="selectedSetting=setting" href="#">{{setting}}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="input-group">
+        <span class="input-group-addon">开始次数</span>
+        <input type="number" class="form-control" v-model="startTime"/>
+        <span class="input-group-addon">结束次数</span>
+        <input type="number" class="form-control" v-model="endTime"/>
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-success" @click="run">选择一个工作目录后开始</button>
+        <button class="btn btn-success" @click="outputLog">导出日志到工作目录</button>
+    </div>
+    <div style="margin-top:0.5em;">
+        <iframe ref="iframe" src="" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+    </div>
+</div>
+
+<script>
+    var loaded,
+         vm,
+         ifr;
+
+    var nextProxy = new Proxy({
+        time : 0
+    },{
+        set: function(obj, prop, value) {
+            if (prop == "time") {
+                obj[prop] = value;
+                spider();
+            }
+        }
+    });
+
+    var spider = function () {
+        if (nextProxy.time <= vm.endTime) {
+            notify(null,"开始次数为 : " + nextProxy.time + " 的爬取");
+            var pass = true,
+                times = nextProxy.time;
+            /**
+             * 生成请求参数
+             * */
+            var requestParam = {},
+                headerParam = {},
+                url = vm.curSetting.requestUrl.url;
+            vm.curSetting.requestParams.forEach(function (obj) {
+                if (obj.method in window.parent.createMethods) {
+                    requestParam[obj.paramName] = window.parent.createMethods[obj.method](obj.defaultValue,times);
+                } else {
+                    pass = false;
+                    notify("","没有找到策略 [" + obj.method + "]");
+                    return;
+                }
+            });
+            vm.curSetting.headerParams.forEach(function (obj) {
+                if (obj.method in window.parent.createMethods) {
+                    headerParam[obj.paramName] = window.parent.createMethods[obj.method](obj.defaultValue,times);
+                } else {
+                    pass = false;
+                    notify("","没有找到策略 [" + obj.method + "]");
+                    return;
+                }
+            });
+            //生成 url
+            if (vm.curSetting.requestUrl.method in window.parent.createMethods) {
+                url = window.parent.createMethods[vm.curSetting.requestUrl.method](url,times);
+            } else {
+                notify("","没有找到策略 [" + obj.method + "]");
+                return ;
+            }
+            var param_ = {
+                url : url,
+                type : vm.curSetting.requestUrl.type,
+                form : requestParam,
+                headers : headerParam
+            };
+            if (pass) {
+                if (vm.curSetting.requestUrl.type.toLowerCase() == "page") {
+                    var p = [];
+                    for (var i in requestParam) {
+                        p.push(i + "=" + requestParam[i]);
+                    }
+                    ifr.onload = loaded.bind(null,param_,times,function () {
+                        return $(ifr.contentWindow.document);
+                    });
+                    ifr.src = url + "?" + p.join("&");
+                } else if(vm.curSetting.requestUrl.type.toLowerCase() == "mpage") {
+                    //清空后台数据
+                    eventManager.run(eventManager.events.file.fetchSaveDom,() => {});
+                    ifr.onload = loaded.bind(null,param_,times,function () {
+                        return $(ifr.contentWindow.document);
+                    });
+                    //配置后台转发 url
+                    var p = [];
+                    for (var i in requestParam) {
+                        p.push(i + "=" + requestParam[i]);
+                    }
+                    //利用隐藏窗体进行页面的获取
+                    ipc.send("fetchFore",{
+                        view : "viewOP",
+                        url : url + "?" + p.join("&")
+                    });
+                    //监听
+                    intervalId = setInterval(function () {
+                        eventManager.run(eventManager.events.file.fetchSaveDom,function (ret) {
+                            if (ret[0] == "saving") {
+                                return ;
+                            }
+                            clearInterval(intervalId);
+                            if (ret[0]) {
+                                notify(null,"发生错误");
+                            } else {
+                                ifr.contentWindow.document.body.innerHTML = ret[1];
+                                ifr.onload();
+                            }
+                        });
+                    },500);
+                } else {
+                    eventManager.run(eventManager.events.request[vm.curSetting.requestUrl.type.toLowerCase()],function (ret) {
+                        if (ret[0]) {
+                            notify(null,"发生错误");
+                        } else {
+                            ifr.contentWindow.document.body.innerHTML = ret[2];
+                            loaded(param_,times,ret[2]);
+                        }
+                    },param_,"error");
+                }
+            }
+        } else {
+            notify(null,"爬取结束");
+        }
+    };
+
+    vm = new Vue({
+        el : "#main",
+        data : {
+            //工作目录，用于存放过程中用到的所有文件
+            workDir : "",
+            settings : [],
+            selectedSetting : "",
+            curSetting : {},
+            startTime : "",
+            endTime : ""
+        },
+        methods : {
+            //获取所有的配置信息
+            refreshSetting : function () {
+                eventManager.workDir = "";
+                eventManager.run(eventManager.events.requestManager.getAll ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取配置失败");
+                    } else {
+                        ret = ret[1];
+                        this.settings = [];
+                        for (var i = 0;i < ret.length;i++) {
+                            this.settings.push(ret[i].substring(0,ret[i].length - 5));
+                        }
+                    }
+                }.bind(this),null,"error");
+            },
+            //获取一个配置项
+            fetchSetting : function (setting) {
+                eventManager.workDir = "";
+                eventManager.run(eventManager.events.requestManager.fetch ,function (ret) {
+                    if (ret[0]) {
+                        notify(null,"获取失败，已记录到日志中");
+                    } else {
+                        ret = JSON.parse(ret[1]);
+                        notify(null,"成功加载配置项 [" + setting + "]");
+                        this.curSetting = ret;
+                        if (ret.dear) {
+                            eval("window.loaded = " + ret.dear);
+                        } else {
+                            window.loaded = function () {};
+                        }
+                    }
+                }.bind(this),setting,"error");
+            },
+            run : function () {
+                if (!this.workDir) {
+                    var dir;
+                    dir = dialog.showOpenDialog ({
+                        properties : ["openDirectory"]
+                    });
+                    if (dir) {
+                        this.workDir = dir[0];
+                        eventManager.workDir = this.workDir;
+                    }
+                }
+                nextProxy.time = this.startTime;
+            },
+            outputLog : function () {
+                if (!this.workDir) {
+                    notify(null,"请先选择一个工作目录用于导出日志");
+                } else {
+                    eventManager.run(eventManager.events.log.output,function (ret) {
+                        if (ret[0]) {
+                            notify(null,ret[0]);
+                        } else {
+                            notify(null,ret[1]);
+                        }
+                    },this.workDir,"error");
+                }
+            }
+        },
+        watch : {
+            selectedSetting : function (newV) {
+                if (this.settings.indexOf(newV) + 1) {
+                    this.fetchSetting(newV);
+                }
+            }
+        },
+        mounted : function () {
+            this.refreshSetting();
+            ifr = this.$refs.iframe;
+            eventManager.workDir = "";
+        }
+    });
+</script>

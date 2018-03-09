@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" type="image/png" href="assets/img/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>title</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+    <!-- Bootstrap core CSS     -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Animation library for notifications   -->
+    <link href="assets/css/animate.min.css" rel="stylesheet"/>
+    <!--  Light Bootstrap Table core CSS    -->
+    <link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
+    <!--  CSS for Demo Purpose, don't include it in your project     -->
+    <link href="assets/css/demo.css" rel="stylesheet" />
+    <!--     Fonts and icons     -->
+    <link href="assets/css/pe-icon-7-stroke.css" rel="stylesheet" />
+</head>
+
+<body>
+
+<div id="loading" style="display:none;position: absolute;z-index: 100;width: 100%;height: 100%;padding: 20%;box-sizing: border-box;background: rgba(117, 117, 117, 0.16);">
+    <img src="./assets/svg/loading.one.svg" alt="" style="width: 100%;height: 100%;">
+</div>
+
+<div id="baseAPIELE" v-show="action" style="position: absolute;z-index: 100;width: 100%;height: 100%;padding: 20%;box-sizing: border-box;background: rgba(117, 117, 117, 0.16);">
+    <div v-show="prompt" class="panel panel-info">
+        <div class="panel-heading">{{promptInfo.title}}<i class="pe-7s-close" @click="close('')" style="float: right;cursor: pointer;font-size: 2em;"></i></div>
+        <div class="panel-body">
+            <div class="input-group">
+                <input v-model="promptInfo.value" type="text" class="form-control" :placeholder="promptInfo.placeholder">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" @click="close(promptInfo.value)">完成</button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="purple" data-image="assets/img/sidebar-5.jpg">
+
+    	<div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="" @click.prevent="backToMainView" class="simple-text">
+                    {{title}}
+                </a>
+            </div>
+
+            <v-nav :menus="menus" @link="linkToView"></v-nav>
+
+    	</div>
+    </div>
+
+    <div class="main-panel">
+        
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">{{curTitle}}</a>
+                </div>
+                <div class="collapse navbar-collapse">
+                </div>
+            </div>
+        </nav>
+
+
+        <div class="content" style="height: calc(100% - 61px);">
+            <iframe ref="currentView" src="testView.html" frameborder="0" style="width: 100%;height: 100%;border:none;margin: 0;padding: 0;"></iframe>
+        </div>
+
+    </div>
+</div>
+
+</body>
+
+    <!--   Core JS Files   -->
+    <script src="assets/js/jquery-1.10.2.js" type="text/javascript"></script>
+    <script>if (typeof module === 'object') {window.jQuery = window.$ = module.exports;};</script>
+	<script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="assets/js/vue.min.js"></script>
+
+    <!--  Notifications Plugin    -->
+    <script src="assets/js/bootstrap-notify.js"></script>
+
+    <!-- Light Bootstrap Table Core javascript and methods for Demo purpose -->
+	<script src="assets/js/light-bootstrap-dashboard.js"></script>
+
+	<!-- Light Bootstrap Table DEMO methods, don't include it in your project! -->
+	<script src="assets/js/eventManager.js"></script>
+	<script src="assets/js/demo.js"></script>
+
+	<script type="text/javascript">
+
+    	Vue.component("vNav",{
+    	    template :
+                '<ul class="nav">\
+                    <li style="cursor: pointer;" v-for="(menu,ind) in menus" :key="ind">\
+                        <a @click.prevent="linkTo(menu.url,menu.text)">\
+                            <i :class="menu.class"></i>\
+                            <p v-html="menu.text"></p>\
+                        </a>\
+                    </li>\
+                </ul>',
+            /**
+             * menus = [ { url , class text } ]
+             * */
+            props : ['menus'],
+            methods : {
+                linkTo : function (url,text) {
+                    this.$emit("link",url,text);
+                }
+            }
+        });
+
+    	var vm = new Vue({
+            el : ".wrapper",
+            data : {
+                title : "spider",
+                curTitle : "总览",
+                menus : [{
+                    url : "previewDear.html",
+                    text : "配置模拟页预处理脚本",
+                    class : "pe-7s-scissors"
+                },{
+                    url : "database.html",
+                    text : "配置数据库",
+                    class : "pe-7s-server"
+                },{
+                    url : "log.html",
+                    text : "查看日志",
+                    class : "pe-7s-pin"
+                },{
+                    url : "spiderParam.html",
+                    text : "配置参数生成策略",
+                    class : "pe-7s-settings"
+                },{
+                    url : "spiderSetting.html",
+                    text : "配置爬取页面信息",
+                    class : "pe-7s-map-marker"
+                },{
+                    url : "spiderPage.html",
+                    text : "爬取",
+                    class : "pe-7s-news-paper"
+                }]
+            },
+            methods : {
+                backToMainView : function () {
+                    this.linkToView("main.html","总览");
+                },
+                linkToView : function (url,text) {
+                    this.curTitle = text;
+                    this.$refs.currentView.src = url;
+                }
+            },
+            mounted : function () {
+                this.backToMainView();
+            }
+        });
+
+	</script>
+
+</html>
