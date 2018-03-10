@@ -75,16 +75,7 @@ app.on('activate', () => {});
  *      带有 view 属性时，为对 view 对象的操作
  * */
 ipc.on("fetchFore",function (e,obj) {
-    if (obj.view) {
-        /**
-         * url : ""
-         * */
-        view.webContents.loadURL(obj.url);
-    } else if (obj.contact) {
-        mainViewContactEvent = e;
-    } else {
-        fetchEventDear(e,obj);
-    }
+    fetchEventDear(e,obj);
 });
 
 

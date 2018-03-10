@@ -1,5 +1,5 @@
 {
-  "name": "base version",
+  "name": "base_version",
   "version": "1.0.0",
   "description": "基于 ipc 规范好 前后 通信 api 的版本",
   "main": "main.js",

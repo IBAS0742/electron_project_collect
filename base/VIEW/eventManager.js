@@ -209,3 +209,13 @@ eventManager = new Proxy({
         obj[prop] = value;
     }
 });
+
+eventManager.run(eventManager.events.request,function (ret) {
+    console.log("---- 请求结果 ----");
+    console.log(ret);
+},{
+    url : "",
+    header : {},
+    method : "get",
+    form : {}
+},"error");
