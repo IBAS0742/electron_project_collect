@@ -82,7 +82,7 @@ module.exports.fetchEventDear = (function (log4j,fs,rootDir) {
     } else {
         let replaceLog = function (tar,level,msg) {
             msg = '┏ ' + tar + ' ## ' + level + ' -------------------\n' + msg +
-                '\n┗ ----------------------------';
+                '\n┗ ----------------------------\n';
             console.log(msg);
             //将 console 日志进行保存
             fs.appendFile("./logs/console.log", msg, (err) => {
